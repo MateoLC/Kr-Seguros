@@ -25,5 +25,5 @@ Modelo: Kling 3.0, pro, 16:9, 15 segundos, sin audio.
 ID de generación: 3a051132-903f-487d-a75e-b30fdadd06ba.
 Escenas ilustrativas generadas con IA: consulta médica, familia en un parque, hogar, empresa, mascotas y automóvil en carretera.
 Dirección: fotografía realista y cálida, personas latinoamericanas, movimiento suave, protagonistas hacia el centro y la derecha, sin textos ni logotipos incrustados.
-Salida web: H.264, 1280 × 720, 24 fps, CRF 25, inicio rápido y sin audio.
+Salida web actualizada: H.264, 1280 × 720, 30 fps, CRF 24, inicio rápido y sin audio. Montaje de 14,4 s: seis escenas de 3 s, fundidos cruzados de 600 ms y cierre continuo del bucle.
 Los nombres de los seguros, controles y enlaces se superponen en HTML.

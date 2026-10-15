@@ -67,36 +67,97 @@ if ('IntersectionObserver' in window) {
   const name = hero.querySelector('#hero-scene-name');
   const link = hero.querySelector('#hero-scene-link');
   const motion = window.matchMedia('(prefers-reduced-motion: reduce)');
+  const snapshot = hero.querySelector('.hero-transition');
+  const snapshotContext = snapshot.getContext('2d');
+  const sceneCard = hero.querySelector('.hero-scene-card');
   const scenes = [
     { name: 'Salud', id: 'salud', start: 0, label: 'PROTECCIÓN PARA TU' },
-    { name: 'Vida', id: 'vida', start: 61 / 24, label: 'PROTECCIÓN PARA TU' },
-    { name: 'Hogar', id: 'hogar', start: 121 / 24, label: 'PROTECCIÓN PARA TU' },
-    { name: 'Empresa', id: 'empresas', start: 183 / 24, label: 'PROTECCIÓN PARA TU' },
-    { name: 'Mascota', id: 'mascotas', start: 245 / 24, label: 'PROTECCIÓN PARA TU' },
-    { name: 'Vehículo', id: 'vehiculos', start: 303 / 24, label: 'PROTECCIÓN PARA TU' }
+    { name: 'Vida', id: 'vida', start: 2.4, label: 'PROTECCIÓN PARA TU' },
+    { name: 'Hogar', id: 'hogar', start: 4.8, label: 'PROTECCIÓN PARA TU' },
+    { name: 'Empresa', id: 'empresas', start: 7.2, label: 'PROTECCIÓN PARA TU' },
+    { name: 'Mascota', id: 'mascotas', start: 9.6, label: 'PROTECCIÓN PARA TU' },
+    { name: 'Vehículo', id: 'vehiculos', start: 12, label: 'PROTECCIÓN PARA TU' }
   ];
   let userPaused = motion.matches || Boolean(navigator.connection?.saveData);
   let visible = true;
   let failed = false;
   let active = -1;
   let pendingScene = null;
-  // Scene starts were measured against the final 24 fps film.
+  let progressFrame = null;
+  let snapshotAnimation = null;
+  let snapshotVisible = false;
+  let selectionVersion = 0;
+  // The film contains six 600 ms dissolves, including the loop seam.
+  // Refresh the progress at display cadence instead of timeupdate's sparse events.
+  function stopProgress() {
+    if (progressFrame !== null) cancelAnimationFrame(progressFrame);
+    progressFrame = null;
+    updateScene();
+  }
+  function startProgress() {
+    if (progressFrame !== null) return;
+    function frame() {
+      progressFrame = null;
+      updateScene();
+      if (!video.paused && !video.seeking && video.readyState >= 3 && visible && !document.hidden) {
+        progressFrame = requestAnimationFrame(frame);
+      }
+    }
+    progressFrame = requestAnimationFrame(frame);
+  }
+  // Hold the outgoing frame only during a manual seek; fade it over the ready
+  // incoming shot so decoder/buffering delays never flash a different scene.
+  function holdSnapshot() {
+    if (motion.matches || !snapshotContext || video.readyState < 2) return;
+    // Capture the currently visible blend, even if a second selection interrupts it.
+    const buffer = document.createElement('canvas');
+    buffer.width = video.videoWidth;
+    buffer.height = video.videoHeight;
+    const context = buffer.getContext('2d');
+    if (!context) return;
+    context.drawImage(video, 0, 0, buffer.width, buffer.height);
+    if (snapshotVisible) {
+      context.globalAlpha = Number.parseFloat(getComputedStyle(snapshot).opacity);
+      context.drawImage(snapshot, 0, 0, buffer.width, buffer.height);
+    }
+    snapshotAnimation?.cancel();
+    snapshot.width = buffer.width;
+    snapshot.height = buffer.height;
+    snapshotContext.drawImage(buffer, 0, 0);
+    snapshot.style.opacity = '1';
+    snapshotVisible = true;
+  }
+  function releaseSnapshot(version = selectionVersion) {
+    if (!snapshotVisible || version !== selectionVersion || video.seeking || video.readyState < 2) return;
+    snapshotAnimation?.cancel();
+    snapshot.style.opacity = '0';
+    if (!motion.matches) {
+      snapshotAnimation = snapshot.animate([{ opacity: 1 }, { opacity: 0 }], {
+        duration: 600, easing: 'cubic-bezier(.4, 0, .2, 1)'
+      });
+      snapshotAnimation.onfinish = () => { snapshotVisible = false; };
+    } else snapshotVisible = false;
+  }
   function updateScene() {
     let index = scenes.length - 1;
     while (index > 0 && video.currentTime < scenes[index].start) index--;
-    const end = scenes[index + 1]?.start ?? (Number.isFinite(video.duration) ? video.duration : 361 / 24);
+    const end = scenes[index + 1]?.start ?? (Number.isFinite(video.duration) ? video.duration : 14.4);
     const progress = (video.currentTime - scenes[index].start) / (end - scenes[index].start);
     buttons[index].style.setProperty('--scene-progress', String(Math.max(0, Math.min(1, progress))));
     if (index === active) return;
+    const previous = active;
     active = index;
     buttons.forEach((button, i) => {
       button.classList.toggle('is-active', i === index);
       button.setAttribute('aria-pressed', String(i === index));
-      if (i !== index) button.style.removeProperty('--scene-progress');
     });
     name.textContent = scenes[index].name;
     link.href = '#' + scenes[index].id;
     hero.querySelector('.hero-scene-eyebrow').textContent = scenes[index].label;
+    if (previous !== -1 && !motion.matches) {
+      sceneCard.getAnimations().forEach(animation => animation.cancel());
+      sceneCard.animate([{ opacity: .2 }, { opacity: 1 }], { duration: 400, easing: 'ease-out' });
+    }
   }
   function updatePlayback() {
     const paused = video.paused;
@@ -128,11 +189,26 @@ if ('IntersectionObserver' in window) {
   });
   video.addEventListener('loadeddata', () => hero.classList.add('has-video'));
   video.addEventListener('timeupdate', updateScene);
+  video.addEventListener('playing', startProgress);
+  video.addEventListener('waiting', stopProgress);
+  video.addEventListener('seeking', stopProgress);
+  video.addEventListener('pause', () => { stopProgress(); releaseSnapshot(); });
+  video.addEventListener('seeked', () => {
+    updateScene();
+    if (!video.paused) startProgress();
+    const version = selectionVersion;
+    if (snapshotVisible && !video.paused && 'requestVideoFrameCallback' in video) {
+      video.requestVideoFrameCallback(() => releaseSnapshot(version));
+    } else releaseSnapshot(version);
+  });
   video.addEventListener('play', updatePlayback);
   video.addEventListener('pause', updatePlayback);
   video.addEventListener('error', () => {
     failed = true;
     video.pause();
+    snapshotAnimation?.cancel();
+    snapshot.style.opacity = '0';
+    snapshotVisible = false;
     hero.classList.remove('has-video', 'is-enhanced');
     controls.hidden = true;
     toggle.hidden = true;
@@ -144,12 +220,22 @@ if ('IntersectionObserver' in window) {
   });
   buttons.forEach((button, index) => button.addEventListener('click', () => {
     userPaused = false;
+    selectionVersion++;
+    holdSnapshot();
     if (video.readyState >= 1) video.currentTime = scenes[index].start + .06;
     else pendingScene = index;
     play();
     updateScene();
   }));
-  motion.addEventListener('change', event => { userPaused = event.matches; sync(); });
+  motion.addEventListener('change', event => {
+    userPaused = event.matches;
+    if (event.matches) {
+      snapshotAnimation?.cancel();
+      snapshot.style.opacity = '0';
+      snapshotVisible = false;
+    }
+    sync();
+  });
   document.addEventListener('visibilitychange', sync);
   if ('IntersectionObserver' in window) {
     new IntersectionObserver(entries => {

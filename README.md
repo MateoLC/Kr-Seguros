@@ -49,7 +49,7 @@ Versión revisada en navegador a 1440, 768 y 390 px. Menú móvil, desplegables,
 
 ## Portada en video
 
-La portada usa un video local silencioso con reproducción en bucle, una imagen de respaldo y controles accesibles de pausa y selección de escenas. El texto y el botón de WhatsApp son HTML, por lo que permanecen nítidos y utilizables.
+La portada usa un video local silencioso de 14,4 segundos con fundidos cruzados de 600 ms entre las seis escenas y en el cierre del bucle. Incluye una imagen de respaldo y controles accesibles de pausa y selección. La barra de progreso se actualiza con cada refresco de pantalla; al seleccionar otra escena se conserva el fotograma visible hasta que el nuevo esté listo y se aplica un fundido. El texto y el botón de WhatsApp son HTML, por lo que permanecen nítidos y utilizables.
 
 - Video de publicación: `dist/assets/video/seguros-kr-portada.mp4`.
 - Composición y adaptación a móvil: reglas `.hero-film` en `dist/assets/styles.css`.
