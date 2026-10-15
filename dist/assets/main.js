@@ -55,3 +55,115 @@ if ('IntersectionObserver' in window) {
   }, { rootMargin: '-15% 0px -45% 0px', threshold: 0 });
   sections.forEach(section => navObserver.observe(section));
 }
+
+// Silent hero film: selection, playback, reduced motion and offscreen suspension.
+(() => {
+  const hero = document.querySelector('.hero-film');
+  const video = document.querySelector('#hero-video');
+  if (!hero || !video) return;
+  const controls = hero.querySelector('.hero-services');
+  const toggle = hero.querySelector('.hero-playback');
+  const buttons = [...hero.querySelectorAll('.hero-service')];
+  const name = hero.querySelector('#hero-scene-name');
+  const link = hero.querySelector('#hero-scene-link');
+  const motion = window.matchMedia('(prefers-reduced-motion: reduce)');
+  const scenes = [
+    { name: 'Salud', id: 'salud', start: 0, label: 'PROTECCIÓN PARA TU' },
+    { name: 'Vida', id: 'vida', start: 61 / 24, label: 'PROTECCIÓN PARA TU' },
+    { name: 'Hogar', id: 'hogar', start: 121 / 24, label: 'PROTECCIÓN PARA TU' },
+    { name: 'Empresa', id: 'empresas', start: 183 / 24, label: 'PROTECCIÓN PARA TU' },
+    { name: 'Mascota', id: 'mascotas', start: 245 / 24, label: 'PROTECCIÓN PARA TU' },
+    { name: 'Vehículo', id: 'vehiculos', start: 303 / 24, label: 'PROTECCIÓN PARA TU' }
+  ];
+  let userPaused = motion.matches || Boolean(navigator.connection?.saveData);
+  let visible = true;
+  let failed = false;
+  let active = -1;
+  let pendingScene = null;
+  // Scene starts were measured against the final 24 fps film.
+  function updateScene() {
+    let index = scenes.length - 1;
+    while (index > 0 && video.currentTime < scenes[index].start) index--;
+    const end = scenes[index + 1]?.start ?? (Number.isFinite(video.duration) ? video.duration : 361 / 24);
+    const progress = (video.currentTime - scenes[index].start) / (end - scenes[index].start);
+    buttons[index].style.setProperty('--scene-progress', String(Math.max(0, Math.min(1, progress))));
+    if (index === active) return;
+    active = index;
+    buttons.forEach((button, i) => {
+      button.classList.toggle('is-active', i === index);
+      button.setAttribute('aria-pressed', String(i === index));
+      if (i !== index) button.style.removeProperty('--scene-progress');
+    });
+    name.textContent = scenes[index].name;
+    link.href = '#' + scenes[index].id;
+    hero.querySelector('.hero-scene-eyebrow').textContent = scenes[index].label;
+  }
+  function updatePlayback() {
+    const paused = video.paused;
+    toggle.classList.toggle('is-paused', paused);
+    toggle.setAttribute('aria-label', paused ? 'Reproducir video' : 'Pausar video');
+    toggle.querySelector('.hero-playback-label').textContent = paused ? 'Reproducir' : 'Pausar';
+  }
+  function load() {
+    if (!video.getAttribute('src')) {
+      video.src = video.dataset.src;
+      video.load();
+    }
+  }
+  function play() {
+    if (failed || !visible || document.hidden || userPaused) return;
+    load();
+    video.play().catch(updatePlayback);
+  }
+  function sync() {
+    if (userPaused || !visible || document.hidden) video.pause();
+    else play();
+  }
+  video.addEventListener('loadedmetadata', () => {
+    if (pendingScene !== null) {
+      video.currentTime = scenes[pendingScene].start + .06;
+      pendingScene = null;
+    }
+    updateScene();
+  });
+  video.addEventListener('loadeddata', () => hero.classList.add('has-video'));
+  video.addEventListener('timeupdate', updateScene);
+  video.addEventListener('play', updatePlayback);
+  video.addEventListener('pause', updatePlayback);
+  video.addEventListener('error', () => {
+    failed = true;
+    video.pause();
+    hero.classList.remove('has-video', 'is-enhanced');
+    controls.hidden = true;
+    toggle.hidden = true;
+    hero.querySelector('.hero-scene-card').hidden = true;
+  });
+  toggle.addEventListener('click', () => {
+    userPaused = !video.paused;
+    sync();
+  });
+  buttons.forEach((button, index) => button.addEventListener('click', () => {
+    userPaused = false;
+    if (video.readyState >= 1) video.currentTime = scenes[index].start + .06;
+    else pendingScene = index;
+    play();
+    updateScene();
+  }));
+  motion.addEventListener('change', event => { userPaused = event.matches; sync(); });
+  document.addEventListener('visibilitychange', sync);
+  if ('IntersectionObserver' in window) {
+    new IntersectionObserver(entries => {
+      visible = entries[0].isIntersecting;
+      sync();
+    }, { threshold: 0 }).observe(hero);
+  }
+  // Avoid downloading or autoplaying the film when the visitor requests less motion/data.
+  video.autoplay = !userPaused;
+  video.muted = true;
+  hero.classList.add('is-enhanced');
+  controls.hidden = false;
+  toggle.hidden = false;
+  updateScene();
+  updatePlayback();
+  sync();
+})();

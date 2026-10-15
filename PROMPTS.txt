@@ -18,3 +18,12 @@ Use case: photorealistic-natural. Asset type: premium Colombian insurance websit
 
 
 hero.jpg — Fotografía editorial fotorrealista 3:2 de familia colombiana (madre, padre e hija) riendo espontáneamente en un sofá de lino claro de una sala moderna luminosa. Ropa casual azul marino y celeste, interior neutro, luz natural, plantas discretas. Sin texto, logos ni marcas de agua.
+
+
+PORTADA EN VIDEO — 15 de octubre de 2026
+Modelo: Kling 3.0, pro, 16:9, 15 segundos, sin audio.
+ID de generación: 3a051132-903f-487d-a75e-b30fdadd06ba.
+Escenas ilustrativas generadas con IA: consulta médica, familia en un parque, hogar, empresa, mascotas y automóvil en carretera.
+Dirección: fotografía realista y cálida, personas latinoamericanas, movimiento suave, protagonistas hacia el centro y la derecha, sin textos ni logotipos incrustados.
+Salida web: H.264, 1280 × 720, 24 fps, CRF 25, inicio rápido y sin audio.
+Los nombres de los seguros, controles y enlaces se superponen en HTML.

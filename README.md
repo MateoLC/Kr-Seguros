@@ -25,10 +25,10 @@ Sustituye el dominio del ejemplo por el real. El comando actualiza canonical, Op
 ## Vista previa local
 
 ```bash
-python3 -m http.server 4173 --bind 127.0.0.1 --directory dist
+node scripts/servidor-local.mjs 4187
 ```
 
-Abre http://127.0.0.1:4173. Detén el servidor con Ctrl+C.
+Abre http://127.0.0.1:4187. Este servidor admite rangos HTTP para saltar entre las escenas del video. Detén el servidor con Ctrl+C.
 
 ## Editar
 
@@ -41,8 +41,19 @@ Abre http://127.0.0.1:4173. Detén el servidor con Ctrl+C.
 
 WhatsApp: **573128589533**. Para cambiarlo, reemplázalo en index.html y main.js; actualiza también los teléfonos visibles, enlaces tel y Organization. El mensaje del hero y botón flotante es exactamente “Estoy interesado en un Seguro”.
 
-La tipografía Manrope se carga desde Google Fonts; Arial es la alternativa. No se incluyen formularios, backend ni analítica.
+La tipografía Jost se carga desde Google Fonts y se usa en toda la página: títulos de peso 400–500, textos de 400 y botones de 600. Helvetica Neue y Arial son las alternativas. No se incluyen formularios, backend ni analítica.
 
 ## Verificación realizada
 
 Versión revisada en navegador a 1440, 768 y 390 px. Menú móvil, desplegables, imágenes y enlaces internos comprobados; el selector de interés genera el mensaje de WhatsApp correspondiente. Logo actualizado revisado en escritorio y móvil. La configuración y las credenciales del proveedor de destino deben verificarse en Antigravity al desplegar.
+
+## Portada en video
+
+La portada usa un video local silencioso con reproducción en bucle, una imagen de respaldo y controles accesibles de pausa y selección de escenas. El texto y el botón de WhatsApp son HTML, por lo que permanecen nítidos y utilizables.
+
+- Video de publicación: `dist/assets/video/seguros-kr-portada.mp4`.
+- Composición y adaptación a móvil: reglas `.hero-film` en `dist/assets/styles.css`.
+- Reproducción y selección de escenas: bloque final de `dist/assets/main.js`.
+- Si sustituyes el video, ajusta los tiempos de las escenas en el JavaScript para que los nombres coincidan con las imágenes.
+- La reproducción se detiene cuando la portada sale de pantalla o se oculta la pestaña. Con reducción de movimiento o ahorro de datos, solo se carga el video al solicitar reproducción.
+- El Dockerfile copia el video con el resto de `dist/`; no necesita paquetes, backend ni compilación.
