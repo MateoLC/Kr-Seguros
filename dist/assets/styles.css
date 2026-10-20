@@ -23,16 +23,14 @@
 .footer-brand .brand img{width:84px;height:53px}
 @media(max-width:1200px){.brand img{width:61px;height:38px}.footer-brand .brand img{width:77px;height:48px}}
 
-/* Display the horizontal marks from the supplied brand board without altering it. */
-.brand-art{display:block;position:relative;overflow:hidden;width:245px;aspect-ratio:850/240;flex-shrink:0}
-.brand .brand-art img{position:absolute;max-width:none;width:136.2353%;height:auto;left:-19.4118%;top:-83.3333%;object-fit:initial}
+/* Frame the supplied square logo without modifying the original image. */
+.brand-art{display:block;position:relative;overflow:hidden;width:245px;aspect-ratio:1375/380;flex-shrink:0}
+.brand .brand-art img,.footer-brand .brand-art-white img{position:absolute;max-width:none;width:116.363636%;height:auto;left:-10.545455%;top:-153.947368%;object-fit:initial}
 .brand-art-blue{mix-blend-mode:multiply}
-.brand-art-white{width:260px;aspect-ratio:700/190}
-.footer-brand .brand-art-white img{width:165.4286%;height:auto;left:-32.8571%;top:-657.8947%}
+.brand-art-white{width:260px;mix-blend-mode:screen}
+.footer-brand .brand-art-white img{filter:grayscale(1) invert(1) contrast(5)}
 @media(max-width:1200px){.site-header .brand-art{width:210px}.main-nav{gap:12px}}
 @media(max-width:700px){.site-header .brand-art{width:clamp(165px,49vw,230px)}.header-inner{gap:8px}.header-cta,.menu-toggle{flex-shrink:0}}
-.brand-art-white{mix-blend-mode:screen}
-.footer-brand .brand-art-white img{filter:grayscale(1) contrast(5)}
 
 /* Cinematic service overview. Text and links remain usable without playback. */
 .hero.hero-film{position:relative;isolation:isolate;display:block;min-height:650px;margin-block:18px 32px;padding:72px 64px 142px;overflow:hidden;border-radius:20px;background:#102441;color:#fff}
